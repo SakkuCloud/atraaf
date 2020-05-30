@@ -1,5 +1,6 @@
 package io.github.makbn.atraaf.core.crud;
 
+import io.github.makbn.atraaf.api.request.LoginReq;
 import io.github.makbn.atraaf.core.entity.Role;
 import io.github.makbn.atraaf.core.entity.UserEntity;
 import io.github.makbn.atraaf.core.exception.InternalServerException;
@@ -8,6 +9,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Optional;
@@ -44,6 +46,15 @@ public class UserCRUD {
                 .uniqueResultOptional();
     }
 
+    @Transactional
+    public Optional<UserEntity> findUserByLoginInfo(LoginReq loginReq) {
+        Session session = hibernate.getCurrentSession();
+        return session.createQuery("from UserEntity  u where u.username = :username and " +
+                "u.password = :password", UserEntity.class)
+                .setParameter("username", loginReq.getUsername())
+                .setParameter("password", loginReq.getPassword())
+                .uniqueResultOptional();
+    }
 
     @Transactional
     public Optional<UserEntity> test(){

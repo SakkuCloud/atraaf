@@ -45,7 +45,9 @@ public class ConfigProvider {
 
     public File createConfigFile(ApplicationEntity app, EnvironmentEntity ee, String extension) throws InternalServerException {
         try {
-            File configFile = File.createTempFile(app.getName(),Optional.of(extension).orElse(".properties"));
+            File configFile = File.createTempFile(app.getName(), extension != null ?
+                    "." + extension :
+                    ".properties");
             FileWriter fileWriter = new FileWriter(configFile);
             app.getParameters().forEach(p -> {
                 Optional<ValueEntity> ve = p.getValues()

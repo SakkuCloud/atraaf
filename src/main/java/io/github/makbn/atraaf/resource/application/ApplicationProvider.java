@@ -1,6 +1,5 @@
 package io.github.makbn.atraaf.resource.application;
 
-import io.github.makbn.atraaf.api.business.User;
 import io.github.makbn.atraaf.api.request.ApplicationReq;
 import io.github.makbn.atraaf.api.request.EnvironmentReq;
 import io.github.makbn.atraaf.api.request.ParameterReq;
@@ -58,7 +57,7 @@ public class ApplicationProvider {
 
 
     List<ApplicationEntity> getAllApplication(UserEntity user) {
-        Validate.notNull(user, "id parameter is required");
+        Validate.notNull(user, "user parameter is required");
         return applicationCRUD.getAllApplications(user);
     }
 

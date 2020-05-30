@@ -1,6 +1,5 @@
 package io.github.makbn.atraaf.core.crud;
 
-import io.github.makbn.atraaf.api.business.User;
 import io.github.makbn.atraaf.core.entity.ApplicationEntity;
 import io.github.makbn.atraaf.core.entity.EnvironmentEntity;
 import io.github.makbn.atraaf.core.entity.ParameterEntity;
@@ -69,7 +68,7 @@ public class ApplicationCRUD {
         Session session = hibernate.getCurrentSession();
         return session.createQuery("SELECT app FROM ApplicationEntity app " +
                 "left join EnvironmentEntity env  on env.application = app " +
-                "inner join CollaboratorEntity collab on collab.environment = env " +
+                "left join CollaboratorEntity collab on collab.environment = env " +
                 "where app.owner = :user " +
                 "or collab.user = :user", ApplicationEntity.class)
                 .setParameter("user", user)

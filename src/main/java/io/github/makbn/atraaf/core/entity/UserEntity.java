@@ -27,6 +27,9 @@ public class UserEntity {
     @Column
     private String email;
 
+    @Column
+    private String password;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name="tbl_user_role")
     private Set<Role> roles;

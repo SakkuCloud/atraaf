@@ -39,7 +39,7 @@ public class ConfigResource {
 
 
     @GetMapping("/{appId}/{envId}")
-    public void downloadFile(@RequestHeader("key") String key, @RequestParam(value = "extension",required = false) String extension,
+    public void downloadFile(@RequestHeader("key") String key, @RequestParam(value = "extension",required = true) String extension,
                              @PathVariable("appId")Long appId, @PathVariable("envId") Long envId,
                              HttpServletResponse response) throws ResourceNotFoundException, AccessDeniedException, InternalServerException, IOException {
         ApplicationEntity app = configProvider.getApplicationEntityById(appId);
