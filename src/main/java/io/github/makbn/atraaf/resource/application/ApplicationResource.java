@@ -47,14 +47,6 @@ public class ApplicationResource {
         this.applicationProvider = applicationProvider;
         this.userCRUD = userCRUD;
         this.securityUtils = securityUtils;
-
-        System.out.println(securityUtils.generateToken(UserEntity.builder()
-        .username("makbn")
-                .id(1)
-        .email("mehdi74akbarian@gmail.com")
-        .roles(Collections.singleton(Role.ROLE_USER))
-        .ssoId("2efw")
-        .build(),"435dfsf"));
     }
 
     @PostMapping(value = {"/",""}, produces = MediaType.APPLICATION_JSON_VALUE)
