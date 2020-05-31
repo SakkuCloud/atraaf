@@ -1,0 +1,24 @@
+# ===============================
+# = SERVER
+# ===============================
+server.port=8080
+
+# ===============================
+# = DATA SOURCE
+# ===============================
+datasource.ddl-auto=update
+datasource.dialect=org.hibernate.dialect.MySQL8Dialect
+datasource.url=jdbc:mysql://sql12.freemysqlhosting.net:3306/sql12343544?useSSL=false&allowPublicKeyRetrieval=true
+datasource.username=sql12343544
+datasource.password=BREdmJ7IF6
+datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+datasource.maxpool.size=100
+datasource.allow-bean-definition-overriding=true
+
+# ===============================
+# = SECURITY
+# ===============================
+security.oauth2.resource.filter-order=3
+security.signing-key=LAKacalkAINBjachng_HHsdvhGB__0099dcsd3ndu__nBHc
+security.jwt.token_prefix=Bearer
+security.jwt.header_name=Authorization
