@@ -104,6 +104,7 @@ public class ApplicationCRUD {
             Optional<Serializable> id = Optional.of(session.save(parameterEntity));
             return id.map(ser -> (Long) ser);
         } catch (Exception e) {
+            e.printStackTrace();
             throw InternalServerException.builder()
                     .code(102)
                     .message(e.getMessage())

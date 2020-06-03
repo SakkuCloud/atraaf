@@ -21,6 +21,7 @@ public class EnvironmentService {
                 .id(entity.getId())
                 .name(entity.getName())
                 .updated(entity.getUpdated())
+                .accessKey(entity.getKey().getAccessKey())
                 .build();
     }
 

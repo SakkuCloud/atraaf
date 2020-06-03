@@ -1,69 +1,120 @@
-#   Atraaf
+# Atraaf
 
-This example implements a simple Hello World REST service using MicroProfile.
+Atraaf is an open-source parameter manager based on environments.
 
-## Build and run
+## Users
+### sign up example:
 
-With JDK8+
 ```bash
-mvn package
-java -jar target/Atraaf.jar
+curl --location --request POST '/user' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"email":"me@mail.com",
+	"password":"pass",
+	"username":"myusername",
+	"ssoid":"123",
+	"podToken":"abc"
+}'
+ ```
+
+###  get current user info:
+
+```bash
+curl --location --request GET '/user'
 ```
 
-## Exercise the applicationEntity
+###  get new token example:
 
+```bash
+curl --location --request POST '/user/token' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"username":"myusername",
+	"password":"pass",
+	"podToken":"abc"
+}'
 ```
-curl -X GET http://localhost:8080/greet
-{"message":"Hello World!"}
+## Applications
+### create application example:
 
-curl -X GET http://localhost:8080/greet/Joe
-{"message":"Hello Joe!"}
-
-curl -X PUT -H "Content-Type: applicationEntity/json" -d '{"greeting" : "Hola"}' http://localhost:8080/greet/greeting
-
-curl -X GET http://localhost:8080/greet/Jose
-{"message":"Hola Jose!"}
-```
-
-## Try health and metrics
-
-```
-curl -s -X GET http://localhost:8080/health
-{"outcome":"UP",...
-. . .
-
-# Prometheus Format
-curl -s -X GET http://localhost:8080/metrics
-# TYPE base:gc_g1_young_generation_count gauge
-. . .
-
-# JSON Format
-curl -H 'Accept: applicationEntity/json' -X GET http://localhost:8080/metrics
-{"base":...
-. . .
-
+```bash
+curl --location --request POST '/application' \
+--header 'Authorization: Bearer  XXX' \ #got from getToken service
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "name": "core",
+    "description": "sakku core"
+}'
 ```
 
-## Build the Docker Image
+### get application by id example:
 
-```
-docker build -t Atraaf .
-```
-
-## Start the applicationEntity with Docker
-
-```
-docker run --rm -p 8080:8080 Atraaf:latest
+```bash
+curl --location --request GET '/application/1' \
+--header 'Authorization: Bearer  XXX' 
 ```
 
-Exercise the applicationEntity as described above
+### get all applications:
 
-## Deploy the applicationEntity to Kubernetes
+```bash
+curl --location --request GET '/application' \
+--header 'Authorization: Bearer  XXX' 
+```
+## Environmets
+### create environments for an application example:
 
+```bash
+curl --location --request POST '/application/1' \
+--header 'Authorization: Bearer  XXX' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"name":"development"
+}'
+ ```
+
+### get application environment by id example:
+
+```bash
+curl --location --request GET '/application/1/1' \ # {appID}/{envID}
+--header 'Authorization: Bearer  XXX' 
 ```
-kubectl cluster-info                         # Verify which cluster
-kubectl get pods                             # Verify connectivity to cluster
-kubectl create -f app.yaml               # Deploy applicationEntity
-kubectl get service Atraaf  # Verify deployed service
+
+
+
+### create parameter for application example:
+
+```bash
+curl --location --request POST '/application/1/1' \
+--header 'Authorization: Bearer XXX' \
+--header 'Content-Type: application/json' \
+--data-raw '[
+   {
+      "key":"first.key.name",
+      "value":"first.keyVlue",
+      "global":true # this param is available for all envs
+   },
+   {
+      "key":"second.key.name",
+      "value":"second.keyVlue",
+      "global":false 
+   }
+
+]'
 ```
-# atraaf
+
+
+## Download Configs
+### get config file example:
+
+```bash
+curl --location --request GET '/config/1/1' \ #{appID}/{envID}
+--header 'key: XXXX-XXXXX'  # got from getEnvByID.result.accessKey
+ ```
+
+### get config file in map format example:
+
+```bash
+curl --location --request GET '/config/1/1/map' \
+--header 'key: ebcbe883-fda3-49d1-bb15-ea9035dcf829' 
+```
+

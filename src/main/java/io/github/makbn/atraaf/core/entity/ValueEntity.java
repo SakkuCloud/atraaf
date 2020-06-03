@@ -23,7 +23,7 @@ public class ValueEntity {
     @Column
     private boolean excluded;
 
-    @Column
+    @Column(columnDefinition = "TEXT", length = 3700)
     private String raw;
 
     @ManyToOne

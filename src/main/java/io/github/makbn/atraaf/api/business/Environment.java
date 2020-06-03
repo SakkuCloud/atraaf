@@ -23,4 +23,5 @@ public interface Environment {
     Date created();
     Date updated();
     Set<Parameter> getParameters();
+    String getAccessKey();
 }

@@ -180,6 +180,10 @@ public class ApplicationResource {
                     .message("not allowed")
                     .build();
         }
+        parameterReq = parameterReq.stream()
+                .filter(reqParam-> app.getParameters().stream()
+                        .noneMatch(appParam->appParam.getName().equals(reqParam.getKey())))
+                .collect(Collectors.toSet());
 
         Validate.noNullElements(parameterReq,"one of parameters is null or invalid");
         EnvironmentEntity ee = applicationProvider.getEnvironmentEntityById(envId);

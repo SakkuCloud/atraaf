@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -71,5 +73,17 @@ public class ConfigProvider {
                     .code(5001)
                     .build();
         }
+    }
+
+    public Map<String, String> getConfigFileAsMap(ApplicationEntity app, EnvironmentEntity ee) {
+        Map<String, String> res = new HashMap<>();
+        app.getParameters().forEach(p -> {
+            Optional<ValueEntity> ve = p.getValues()
+                    .stream()
+                    .filter(v -> v.getEnvironment().getId() == ee.getId())
+                    .findFirst();
+            ve.ifPresent(valueEntity -> res.put(p.getName(), valueEntity.getRaw()));
+        });
+        return res;
     }
 }

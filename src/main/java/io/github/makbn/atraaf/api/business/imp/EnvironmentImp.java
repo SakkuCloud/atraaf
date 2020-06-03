@@ -19,6 +19,7 @@ public class EnvironmentImp implements Environment {
     @Builder.Default
     private Date updated = Calendar.getInstance().getTime();
     private Set<Parameter> parameters;
+    private String accessKey;
 
     @Override
     public Date created() {
