@@ -12,7 +12,10 @@ import io.github.makbn.atraaf.api.request.EnvironmentReq;
 import io.github.makbn.atraaf.api.request.ParameterReq;
 import io.github.makbn.atraaf.core.config.security.SecurityUtils;
 import io.github.makbn.atraaf.core.crud.UserCRUD;
-import io.github.makbn.atraaf.core.entity.*;
+import io.github.makbn.atraaf.core.entity.ApplicationEntity;
+import io.github.makbn.atraaf.core.entity.CollaboratorEntity;
+import io.github.makbn.atraaf.core.entity.EnvironmentEntity;
+import io.github.makbn.atraaf.core.entity.UserEntity;
 import io.github.makbn.atraaf.core.exception.AccessDeniedException;
 import io.github.makbn.atraaf.core.exception.InternalServerException;
 import io.github.makbn.atraaf.core.exception.InvalidRequestException;
@@ -30,7 +33,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -180,16 +186,12 @@ public class ApplicationResource {
                     .message("not allowed")
                     .build();
         }
-        parameterReq = parameterReq.stream()
-                .filter(reqParam-> app.getParameters().stream()
-                        .noneMatch(appParam->appParam.getName().equals(reqParam.getKey())))
-                .collect(Collectors.toSet());
 
         Validate.noNullElements(parameterReq,"one of parameters is null or invalid");
         EnvironmentEntity ee = applicationProvider.getEnvironmentEntityById(envId);
         Set<Parameter> parameters = parameterReq.stream()
                 .filter(p -> StringUtils.isNotEmpty(p.getKey()))
-                .map(p -> applicationProvider.saveParam(p, ee))
+                .map(p -> applicationProvider.saveOrUpdateParam(app, p, ee))
         .map(pe -> ParameterService.getParameterForEnvironment(pe, ee))
         .collect(Collectors.toSet());
 

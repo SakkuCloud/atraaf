@@ -95,6 +95,17 @@ public class ApplicationProvider {
                         .build());
     }
 
+
+    public ParameterEntity saveOrUpdateParam(ApplicationEntity app, ParameterReq p, EnvironmentEntity ee) throws InternalServerException {
+
+        for (ParameterEntity appParam : app.getParameters()) {
+            if (appParam.getName().equals(p.getKey())) {
+                return addValueToParam(appParam, p, ee);
+            }
+        }
+        return saveParam(p, ee);
+    }
+
     public ParameterEntity saveParam(ParameterReq p, EnvironmentEntity ee) throws InternalServerException {
         ParameterEntity parameterEntity = ParameterEntity.builder()
                 .name(p.getKey())
@@ -129,5 +140,24 @@ public class ApplicationProvider {
         parameterEntity.setId(paramId);
 
         return parameterEntity;
+    }
+
+    public ParameterEntity addValueToParam(ParameterEntity appParam, ParameterReq p, EnvironmentEntity ee) throws InternalServerException {
+
+        if (p.isGlobal())
+            ;//throw error
+        if (appParam.getValues() == null) {
+            appParam.setValues(new HashSet<>());
+        }
+        appParam.getValues().add(ValueEntity.builder()
+                .environment(ee)
+                .parameter(appParam)
+                .isDefault(false)
+                .raw(p.getValue())
+                .build());
+
+        applicationCRUD.updateParameter(appParam);
+
+        return appParam;
     }
 }

@@ -111,4 +111,18 @@ public class ApplicationCRUD {
                     .build();
         }
     }
+
+    @Transactional
+    public void updateParameter(ParameterEntity parameterEntity) throws InternalServerException {
+        try {
+            Session session = hibernate.getCurrentSession();
+            session.update(parameterEntity);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw InternalServerException.builder()
+                    .code(102)
+                    .message(e.getMessage())
+                    .build();
+        }
+    }
 }
