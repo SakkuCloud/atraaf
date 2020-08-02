@@ -67,11 +67,10 @@ public class ApplicationCRUD {
     public List<ApplicationEntity> getAllApplications(UserEntity user) {
         Session session = hibernate.getCurrentSession();
         return session.createQuery("SELECT app FROM ApplicationEntity app " +
-                "left join EnvironmentEntity env  on env.application = app " +
-                "left join CollaboratorEntity collab on collab.environment = env " +
-                "where app.owner = :user " +
-                "or collab.user = :user", ApplicationEntity.class)
-                .setParameter("user", user)
+                "where app.owner.id = :userId " +
+                "or :userId in ( select collab.user.id from EnvironmentEntity env " +
+                "left join CollaboratorEntity collab on collab.environment = env where  env.application = app )", ApplicationEntity.class)
+                .setParameter("userId", user.getId())
                 .list();
     }
 

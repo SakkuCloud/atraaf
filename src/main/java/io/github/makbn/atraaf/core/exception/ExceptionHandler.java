@@ -39,13 +39,13 @@ public class ExceptionHandler extends ResponseEntityExceptionHandler implements 
         HttpHeaders headers = new HttpHeaders();
 
         if (ex instanceof InvalidRequestException) {
-            HttpStatus status = HttpStatus.BAD_REQUEST;
+            HttpStatus status = HttpStatus.valueOf(((InvalidRequestException) ex).code);
             InvalidRequestException irex = (InvalidRequestException) ex;
             return handleInvalidRequestException(irex, headers, status, request);
         } else if (ex instanceof ResourceNotFoundException) {
             HttpStatus status = HttpStatus.NOT_FOUND;
             return handleExceptionInternal(ex, headers, status, request);
-        } else if (ex instanceof AccessDeniedException) {
+        } else if (ex instanceof AccessDeniedException || ex instanceof io.github.makbn.atraaf.core.exception.AccessDeniedException) {
             HttpStatus status = HttpStatus.FORBIDDEN;
             return handleExceptionInternal(ex, headers, status, request);
         } else {
