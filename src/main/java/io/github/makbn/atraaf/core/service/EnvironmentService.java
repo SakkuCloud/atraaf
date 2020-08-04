@@ -9,8 +9,7 @@ import io.github.makbn.atraaf.core.entity.EnvironmentEntity;
 import io.github.makbn.atraaf.core.entity.ParameterEntity;
 import io.github.makbn.atraaf.core.entity.ValueEntity;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class EnvironmentService {
@@ -25,10 +24,10 @@ public class EnvironmentService {
                 .build();
     }
 
-    public static Set<Environment> getEnvironments(Set<EnvironmentEntity> entities){
+    public static SortedSet<Environment> getEnvironments(Set<EnvironmentEntity> entities) {
         return entities.stream()
                 .map(EnvironmentService::getEnvironment)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparingLong(Environment::getId))));
     }
 
     public static Environment getEnvironmentWithParam(EnvironmentEntity entity, ApplicationEntity application){
@@ -48,7 +47,7 @@ public class EnvironmentService {
                         .key(p.getName())
                         .value(findValue(p, environment))
                         .build())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(Parameter::getKey))));
 
     }
 
@@ -63,8 +62,6 @@ public class EnvironmentService {
 
         return p.getValues().stream()
                 .filter(ValueEntity::isDefault)
-                .findFirst()
-                .get()
-                .getRaw();
+                .findFirst().map(ValueEntity::getRaw).orElse(null);
     }
 }

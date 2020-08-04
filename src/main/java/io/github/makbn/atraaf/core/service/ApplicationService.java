@@ -6,6 +6,7 @@ import io.github.makbn.atraaf.core.entity.ApplicationEntity;
 import io.github.makbn.atraaf.core.entity.EnvironmentEntity;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,7 @@ public class ApplicationService {
     public static List<Application> getApplications(List<ApplicationEntity> entities){
         return entities.parallelStream()
                 .map(ApplicationService::getApplication)
+                .sorted(Comparator.comparingLong(Application::getId))
                 .collect(Collectors.toList());
     }
 

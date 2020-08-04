@@ -42,6 +42,17 @@ public class ApplicationProvider {
         return applicationEntity;
     }
 
+    public void removeApplication(ApplicationEntity applicationEntity) {
+        applicationCRUD.removeApplication(applicationEntity);
+    }
+
+    public void removeEnvironment(EnvironmentEntity environmentEntity) {
+        applicationCRUD.removeEnvironment(environmentEntity);
+    }
+
+    public void removeParameter(ParameterEntity parameterEntity) {
+        applicationCRUD.removeParameter(parameterEntity);
+    }
 
     ApplicationEntity getApplicationEntityById(Long id) throws ResourceNotFoundException {
         Validate.notNull(id, "id parameter is required");
@@ -66,7 +77,7 @@ public class ApplicationProvider {
                 .parallelStream()
                 .anyMatch(e -> e.getName().toLowerCase().equals(env.getName().toLowerCase().trim()))){
             throw InvalidRequestException.builder()
-                    .code(HttpStatus.BAD_REQUEST.value())
+                    .code(HttpStatus.CONFLICT.value())
                     .message("environment's name is taken")
                     .build();
         }
@@ -87,11 +98,26 @@ public class ApplicationProvider {
         return environmentEntity;
     }
 
-    public EnvironmentEntity getEnvironmentEntityById(Long envId) throws ResourceNotFoundException {
+    public EnvironmentEntity getEnvironmentEntityById(Long envId, Long appId) throws ResourceNotFoundException {
         Validate.notNull(envId, "envId parameter is required");
-        return applicationCRUD.findEnvironmentById(envId)
+        Validate.notNull(appId, "appId parameter is required");
+        EnvironmentEntity ee = applicationCRUD.findEnvironmentById(envId)
                 .orElseThrow(() -> ResourceNotFoundException.builder()
-                        .message("environment not found")
+                        .message("environment " + envId + " not found")
+                        .build());
+        if (ee.getApplication().getId() != appId)
+            throw ResourceNotFoundException.builder()
+                    .message("environment " + envId + " not found for this application")
+                    .build();
+        return ee;
+    }
+
+
+    public ParameterEntity getParameterEntityByName(String paramName, ApplicationEntity app) throws ResourceNotFoundException {
+        Validate.notNull(paramName, "paramName parameter is required");
+        return applicationCRUD.findParameterByName(paramName, app)
+                .orElseThrow(() -> ResourceNotFoundException.builder()
+                        .message("parameter " + paramName + " not found for this application")
                         .build());
     }
 

@@ -9,13 +9,12 @@ import io.github.makbn.atraaf.api.common.AtraafResponse;
 import io.github.makbn.atraaf.api.common.imp.AtraafResponseImp;
 import io.github.makbn.atraaf.api.request.ApplicationReq;
 import io.github.makbn.atraaf.api.request.EnvironmentReq;
+import io.github.makbn.atraaf.api.request.ParameterEnvsReq;
 import io.github.makbn.atraaf.api.request.ParameterReq;
+import io.github.makbn.atraaf.api.request.imp.ParameterReqImp;
 import io.github.makbn.atraaf.core.config.security.SecurityUtils;
 import io.github.makbn.atraaf.core.crud.UserCRUD;
-import io.github.makbn.atraaf.core.entity.ApplicationEntity;
-import io.github.makbn.atraaf.core.entity.CollaboratorEntity;
-import io.github.makbn.atraaf.core.entity.EnvironmentEntity;
-import io.github.makbn.atraaf.core.entity.UserEntity;
+import io.github.makbn.atraaf.core.entity.*;
 import io.github.makbn.atraaf.core.exception.AccessDeniedException;
 import io.github.makbn.atraaf.core.exception.InternalServerException;
 import io.github.makbn.atraaf.core.exception.InvalidRequestException;
@@ -33,10 +32,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -171,12 +167,83 @@ public class ApplicationResource {
                 .build();
     }
 
+    @DeleteMapping(value = "/{appId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ROLE_USER')")
+    public AtraafResponse<Boolean> removeApplication(@PathVariable(value = "appId") Long appId)
+            throws ResourceNotFoundException, AccessDeniedException, InvalidRequestException, InternalServerException {
+        User user = getUser(true);
+        ApplicationEntity app = applicationProvider.getApplicationEntityById(appId);
+        if (app.getOwner().getId() != Objects.requireNonNull(user).getId()) {
+            throw AccessDeniedException.builder()
+                    .code(HttpStatus.FORBIDDEN.value())
+                    .message("not allowed")
+                    .build();
+        }
+
+        applicationProvider.removeApplication(app);
+
+        return AtraafResponseImp.<Boolean>builder()
+                .code(HttpStatus.NO_CONTENT.value())
+                .result(true)
+                .build();
+    }
+    // app/appid/env/envid was better!
+    // app/appid/param/paramId was better!
+
+    @DeleteMapping(value = "/{appId}/{envId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ROLE_USER')")
+    public AtraafResponse<Boolean> removeEnvironment(@PathVariable(value = "appId") Long appId,
+                                                     @PathVariable(value = "envId") Long envId
+    )
+            throws ResourceNotFoundException, AccessDeniedException, InvalidRequestException, InternalServerException {
+        User user = getUser(true);
+        ApplicationEntity app = applicationProvider.getApplicationEntityById(appId);
+        if (app.getOwner().getId() != Objects.requireNonNull(user).getId()) {
+            throw AccessDeniedException.builder()
+                    .code(HttpStatus.FORBIDDEN.value())
+                    .message("not allowed")
+                    .build();
+        }
+        EnvironmentEntity ee = applicationProvider.getEnvironmentEntityById(envId, appId);
+
+        applicationProvider.removeEnvironment(ee);
+
+        return AtraafResponseImp.<Boolean>builder()
+                .code(HttpStatus.OK.value())
+                .result(true)
+                .build();
+    }
+
+    @DeleteMapping(value = "/{appId}/params", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ROLE_USER')")
+    public AtraafResponse<Boolean> removeParameter(@PathVariable(value = "appId") Long appId,
+                                                   @RequestParam(value = "name") String paramName
+    )
+            throws ResourceNotFoundException, AccessDeniedException, InvalidRequestException, InternalServerException {
+        User user = getUser(true);
+        ApplicationEntity app = applicationProvider.getApplicationEntityById(appId);
+        if (app.getOwner().getId() != Objects.requireNonNull(user).getId()) {
+            throw AccessDeniedException.builder()
+                    .code(HttpStatus.FORBIDDEN.value())
+                    .message("not allowed")
+                    .build();
+        }
+        ParameterEntity pe = applicationProvider.getParameterEntityByName(paramName, app);
+
+        applicationProvider.removeParameter(pe);
+
+        return AtraafResponseImp.<Boolean>builder()
+                .code(HttpStatus.OK.value())
+                .result(true)
+                .build();
+    }
+
 
     @PostMapping(value = "/{appId}/{envId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAnyRole('ROLE_USER')")
-    public AtraafResponse<Set<Parameter>> createParameter(@PathVariable(value = "appId") Long appId,
-                                                           @PathVariable(value = "envId") Long envId,
-                                                           @RequestBody Set<ParameterReq> parameterReq) throws ResourceNotFoundException, AccessDeniedException {
+    public AtraafResponse<Set<Parameter>> createOrUpdateParameter(@PathVariable(value = "appId") Long appId,
+                                                                  @PathVariable(value = "envId") Long envId,
+                                                                  @RequestBody Set<ParameterReq> parameterReq) throws ResourceNotFoundException, AccessDeniedException {
 
         User user = getUser(true);
         ApplicationEntity app = applicationProvider.getApplicationEntityById(appId);
@@ -188,7 +255,7 @@ public class ApplicationResource {
         }
 
         Validate.noNullElements(parameterReq,"one of parameters is null or invalid");
-        EnvironmentEntity ee = applicationProvider.getEnvironmentEntityById(envId);
+        EnvironmentEntity ee = applicationProvider.getEnvironmentEntityById(envId, appId);
         Set<Parameter> parameters = parameterReq.stream()
                 .filter(p -> StringUtils.isNotEmpty(p.getKey()))
                 .map(p -> applicationProvider.saveOrUpdateParam(app, p, ee))
@@ -198,6 +265,41 @@ public class ApplicationResource {
         return AtraafResponseImp.<Set<Parameter>>builder()
                 .code(HttpStatus.CREATED.value())
                 .result(parameters)
+                .build();
+    }
+
+    @PostMapping(value = "/{appId}/params", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ROLE_USER')")//wrong envIds will be ignored
+    public AtraafResponse<Boolean> createOrUpdateParameter(@PathVariable(value = "appId") Long appId,
+                                                           @RequestBody Set<ParameterEnvsReq> parameterReq) throws ResourceNotFoundException, AccessDeniedException {
+
+        User user = getUser(true);
+        ApplicationEntity app = applicationProvider.getApplicationEntityById(appId);
+        if (app.getOwner().getId() != Objects.requireNonNull(user).getId()) {
+            throw AccessDeniedException.builder()
+                    .code(HttpStatus.FORBIDDEN.value())
+                    .message("not allowed")
+                    .build();
+        }
+        Validate.noNullElements(parameterReq, "one of parameters is null or invalid");
+
+        parameterReq.stream()
+                .filter(p -> StringUtils.isNotEmpty(p.getKey()))
+                .forEach(p -> {
+                    for (Map.Entry<Long, String> envValueEntity : p.getEnvValues().entrySet()) {
+
+                        EnvironmentEntity ee = applicationProvider.getEnvironmentEntityById(envValueEntity.getKey(), appId);
+                        applicationProvider.saveOrUpdateParam(app, ParameterReqImp.builder()
+                                .key(p.getKey())
+                                .value(envValueEntity.getValue())
+                                .global(false)
+                                .build(), ee);
+                    }
+                });
+
+        return AtraafResponseImp.<Boolean>builder()
+                .code(HttpStatus.CREATED.value())
+                .result(true)
                 .build();
     }
 

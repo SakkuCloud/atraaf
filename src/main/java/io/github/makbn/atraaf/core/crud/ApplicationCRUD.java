@@ -56,6 +56,32 @@ public class ApplicationCRUD {
     }
 
     @Transactional
+    public void removeEnvironment(EnvironmentEntity environmentEntity) {
+        if (environmentEntity != null) {
+            Session session = hibernate.getCurrentSession();
+
+            session.createQuery("delete from ValueEntity where environment = :env")
+                    .setParameter("env", environmentEntity)
+                    .executeUpdate();
+
+            session.delete(environmentEntity);
+        }
+    }
+
+    @Transactional
+    public void removeParameter(ParameterEntity parameterEntity) {
+        if (parameterEntity != null) {
+            Session session = hibernate.getCurrentSession();
+
+            session.createQuery("delete from ValueEntity where parameter = :param")
+                    .setParameter("param", parameterEntity)
+                    .executeUpdate();
+
+            session.delete(parameterEntity);
+        }
+    }
+
+    @Transactional
     public Optional<ApplicationEntity> findApplicationById(Long id){
         Validate.notNull(id, "id parameter is required");
         Session session = hibernate.getCurrentSession();
@@ -93,6 +119,15 @@ public class ApplicationCRUD {
         Session session = hibernate.getCurrentSession();
         return session.createQuery("FROM EnvironmentEntity  ee where ee.id = :id", EnvironmentEntity.class)
                 .setParameter("id", envId)
+                .uniqueResultOptional();
+    }
+
+    @Transactional
+    public Optional<ParameterEntity> findParameterByName(String name, ApplicationEntity app) {
+        Session session = hibernate.getCurrentSession();
+        return session.createQuery("FROM ParameterEntity  pe where pe.name = :name and pe.application=:app", ParameterEntity.class)
+                .setParameter("name", name)
+                .setParameter("app", app)
                 .uniqueResultOptional();
     }
 
