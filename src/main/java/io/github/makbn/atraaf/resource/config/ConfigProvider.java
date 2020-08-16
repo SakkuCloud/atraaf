@@ -3,6 +3,7 @@ package io.github.makbn.atraaf.resource.config;
 import io.github.makbn.atraaf.core.crud.ApplicationCRUD;
 import io.github.makbn.atraaf.core.entity.ApplicationEntity;
 import io.github.makbn.atraaf.core.entity.EnvironmentEntity;
+import io.github.makbn.atraaf.core.entity.ParameterEntity;
 import io.github.makbn.atraaf.core.entity.ValueEntity;
 import io.github.makbn.atraaf.core.exception.InternalServerException;
 import io.github.makbn.atraaf.core.exception.ResourceNotFoundException;
@@ -14,9 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 public class ConfigProvider {
@@ -51,19 +50,22 @@ public class ConfigProvider {
                     "." + extension :
                     ".properties");
             FileWriter fileWriter = new FileWriter(configFile);
-            app.getParameters().forEach(p -> {
-                Optional<ValueEntity> ve = p.getValues()
-                        .stream()
-                        .filter(v -> v.getEnvironment().getId() == ee.getId())
-                        .findFirst();
-                if(ve.isPresent()){
-                    try {
-                        fileWriter.write(p.getName()+"="+ve.get().getRaw()+"\n");
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
+            app.getParameters()
+                    .stream()
+                    .sorted(Comparator.comparing(ParameterEntity::getName))
+                    .forEach(p -> {
+                        Optional<ValueEntity> ve = p.getValues()
+                                .stream()
+                                .filter(v -> v.getEnvironment().getId() == ee.getId())
+                                .findFirst();
+                        if (ve.isPresent()) {
+                            try {
+                                fileWriter.write(p.getName() + "=" + ve.get().getRaw() + "\n");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
 
             fileWriter.close();
             return configFile;
@@ -75,15 +77,16 @@ public class ConfigProvider {
         }
     }
 
-    public Map<String, String> getConfigFileAsMap(ApplicationEntity app, EnvironmentEntity ee) {
-        Map<String, String> res = new HashMap<>();
-        app.getParameters().forEach(p -> {
-            Optional<ValueEntity> ve = p.getValues()
-                    .stream()
-                    .filter(v -> v.getEnvironment().getId() == ee.getId())
-                    .findFirst();
-            ve.ifPresent(valueEntity -> res.put(p.getName(), valueEntity.getRaw()));
-        });
+    public SortedMap<String, String> getConfigFileAsMap(ApplicationEntity app, EnvironmentEntity ee) {
+        SortedMap<String, String> res = new TreeMap<>();
+        app.getParameters()
+                .forEach(p -> {
+                    Optional<ValueEntity> ve = p.getValues()
+                            .stream()
+                            .filter(v -> v.getEnvironment().getId() == ee.getId())
+                            .findFirst();
+                    ve.ifPresent(valueEntity -> res.put(p.getName(), valueEntity.getRaw()));
+                });
         return res;
     }
 }

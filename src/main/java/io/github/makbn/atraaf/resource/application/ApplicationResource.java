@@ -283,19 +283,20 @@ public class ApplicationResource {
         }
         Validate.noNullElements(parameterReq, "one of parameters is null or invalid");
 
-        parameterReq.stream()
-                .filter(p -> StringUtils.isNotEmpty(p.getKey()))
-                .forEach(p -> {
-                    for (Map.Entry<Long, String> envValueEntity : p.getEnvValues().entrySet()) {
+        for (ParameterEnvsReq p : parameterReq) {
+            if (StringUtils.isNotEmpty(p.getKey())) {
+                for (Map.Entry<Long, String> envValueEntity : p.getEnvValues().entrySet()) {
 
-                        EnvironmentEntity ee = applicationProvider.getEnvironmentEntityById(envValueEntity.getKey(), appId);
-                        applicationProvider.saveOrUpdateParam(app, ParameterReqImp.builder()
-                                .key(p.getKey())
-                                .value(envValueEntity.getValue())
-                                .global(false)
-                                .build(), ee);
-                    }
-                });
+                    EnvironmentEntity ee = applicationProvider.getEnvironmentEntityById(envValueEntity.getKey(), appId);
+                    applicationProvider.saveOrUpdateParam(app, ParameterReqImp.builder()
+                            .key(p.getKey())
+                            .value(envValueEntity.getValue())
+                            .global(false)
+                            .build(), ee);
+                    app = applicationProvider.getApplicationEntityById(appId);
+                }
+            }
+        }
 
         return AtraafResponseImp.<Boolean>builder()
                 .code(HttpStatus.CREATED.value())

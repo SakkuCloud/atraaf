@@ -171,19 +171,29 @@ public class ApplicationProvider {
     public ParameterEntity addValueToParam(ParameterEntity appParam, ParameterReq p, EnvironmentEntity ee) throws InternalServerException {
 
         if (p.isGlobal())
-            ;//throw error
+            throw new InvalidRequestException("you cant set global field for existing param!", 406);
+
         if (appParam.getValues() == null) {
             appParam.setValues(new HashSet<>());
         }
+
+        //edit value
+        for (ValueEntity value : appParam.getValues()) {
+            if (value.getEnvironment().getId() == ee.getId()) {
+                value.setRaw(p.getValue());
+                applicationCRUD.updateParameter(appParam);
+                return appParam;
+            }
+        }
+
+        //save new value (in new ee) for existing param :)
         appParam.getValues().add(ValueEntity.builder()
                 .environment(ee)
                 .parameter(appParam)
                 .isDefault(false)
                 .raw(p.getValue())
                 .build());
-
         applicationCRUD.updateParameter(appParam);
-
         return appParam;
     }
 }
