@@ -73,9 +73,9 @@ public class ApplicationCRUD {
         if (parameterEntity != null) {
             Session session = hibernate.getCurrentSession();
 
-            session.createQuery("delete from ValueEntity where parameter = :param")
-                    .setParameter("param", parameterEntity)
-                    .executeUpdate();
+//            session.createQuery("delete from ValueEntity where parameter = :param")
+//                    .setParameter("param", parameterEntity)
+//                    .executeUpdate();
 
             session.delete(parameterEntity);
         }
