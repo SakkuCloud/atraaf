@@ -259,8 +259,38 @@ public class ApplicationResource {
         Set<Parameter> parameters = parameterReq.stream()
                 .filter(p -> StringUtils.isNotEmpty(p.getKey()))
                 .map(p -> applicationProvider.saveOrUpdateParam(app, p, ee))
-        .map(pe -> ParameterService.getParameterForEnvironment(pe, ee))
-        .collect(Collectors.toSet());
+                .map(pe -> ParameterService.getParameterForEnvironment(pe, ee))
+                .collect(Collectors.toSet());
+
+        return AtraafResponseImp.<Set<Parameter>>builder()
+                .code(HttpStatus.CREATED.value())
+                .result(parameters)
+                .build();
+    }
+
+    @PostMapping(value = "/{appId}/env/{envId}/by-access-key", produces = MediaType.APPLICATION_JSON_VALUE)
+    public AtraafResponse<Set<Parameter>> createOrUpdateParameterByAccessKey(@RequestHeader("key") String key,
+                                                                             @PathVariable(value = "appId") Long appId,
+                                                                             @PathVariable(value = "envId") Long envId,
+                                                                             @RequestBody Set<ParameterReq> parameterReq) throws ResourceNotFoundException, AccessDeniedException {
+
+        ApplicationEntity app = applicationProvider.getApplicationEntityById(appId);
+
+        Validate.noNullElements(parameterReq, "one of parameters is null or invalid");
+        EnvironmentEntity ee = applicationProvider.getEnvironmentEntityById(envId, appId);
+
+        if (!ee.getKey().getAccessKey().equals(key)) {
+            throw AccessDeniedException.builder()
+                    .code(HttpStatus.FORBIDDEN.value())
+                    .message("not allowed")
+                    .build();
+        }
+
+        Set<Parameter> parameters = parameterReq.stream()
+                .filter(p -> StringUtils.isNotEmpty(p.getKey()))
+                .map(p -> applicationProvider.saveOrUpdateParam(app, p, ee))
+                .map(pe -> ParameterService.getParameterForEnvironment(pe, ee))
+                .collect(Collectors.toSet());
 
         return AtraafResponseImp.<Set<Parameter>>builder()
                 .code(HttpStatus.CREATED.value())
